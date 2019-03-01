@@ -10,8 +10,10 @@ let lines: string[] = require('fs').readFileSync('c_memorable_moments.txt', 'utf
 
 const vBuckets: Picture[] = [];
 const hBuckets: Picture[] = [];
-let vBucketTags: Tag[] = [];
-let hBucketTags: Tag[] = [];
+const slideshow: Picture[] = [];
+const vBucketTags: Tag[] = [];
+const hBucketTags: Tag[] = [];
+let affinitiesBucket: Tag[] = [];
 
 lines.shift();
 lines.pop();
@@ -75,29 +77,39 @@ while (checkPair(vBucketTags)) {
   vBucketTags.sort((a, b) => b.nOccurency - a.nOccurency);
 
   let maxTags = vBucketTags[0];
-  console.log('maxTags', maxTags);
+  // console.log('maxTags', maxTags);
 
   maxTags.slides.sort((a, b) => b.nTag - a.nTag);
 
   let slide1 = maxTags.slides.shift();
   let slide2 = maxTags.slides.shift();
-  console.log('slide1', slide1);
-  console.log('slide2', slide2);
+  // console.log('slide1', slide1);
+  // console.log('slide2', slide2);
 
   let tags = [ ...slide1.tags, ...slide2.tags ].filter(onlyUnique);
 
   let newPicture = new Picture({
     id: `${slide1.id}-${slide2.id}`,
-    type: 'H',
+    type: 'VV',
     nTag: tags.length,
     tags: tags
   });
-  console.log('newPicture', newPicture);
+  // console.log('newPicture', newPicture);
 
   hBuckets.push(newPicture);
 }
 
-// Push h pictures
+console.log('------- hBuckets');
+
+hBuckets.forEach(element => {
+  console.log('id:', element.id);
+  console.log('type:', element.type);
+  console.log('nTag:', element.nTag);
+  console.log('tags:', element.tags);
+  console.log();
+});
+
+// Push h tags
 for (const hBucket of hBuckets) {
   for (const tag of hBucket.tags) {
     const hBucketTag = hBucketTags.find(hBucketTag => hBucketTag.tag.includes(tag));
@@ -112,18 +124,36 @@ for (const hBucket of hBuckets) {
   }
 }
 
-console.log('------- hBuckets');
+affinitiesBucket = getAffinityTags();
+while () {
+  hBucketTags.sort((a, b) => b.nOccurency - a.nOccurency);
 
-hBuckets.forEach(element => {
-  console.log(element.id);
-  console.log(element.type);
-  console.log(element.nTag);
-  console.log(element.tags);
-});
+  let maxTags = hBucketTags[0];
+  // console.log('maxTags', maxTags);
 
-// while () {
+  maxTags.slides.sort((a, b) => b.nTag - a.nTag);
 
-// }
+  let slide = maxTags.slides.pop();
+  // console.log('slide1', slide1);
+
+  let newPicture = new Picture({
+    id: slide.id,
+    type: 'H',
+    nTag: slide.nTag,
+    tags: slide.tags.slice()
+  });
+  // console.log('newPicture', newPicture);
+
+  slideshow.push(newPicture);
+}
+
+function getAffinityTags(picture?: Picture) {
+  if (picture) {
+    return hBucketTags.filter(hBucketTag => hBucketTag.slides.find(p => p.id === picture.id));
+  } else {
+    return hBucketTags;
+  }
+}
 
 function onlyUnique(value, index, self) {
   return self.indexOf(value) === index;
